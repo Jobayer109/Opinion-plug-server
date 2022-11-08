@@ -1,5 +1,5 @@
 const express = require("express");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const cors = require("cors");
 const app = express();
 const port = process.env.PORT || 5000;
@@ -18,11 +18,24 @@ const client = new MongoClient(uri, {
 const dbConnect = async () => {
   try {
     const serviceCollection = client.db("opinion-plug").collection("services");
+    const reviewCollection = client.db("opinion-plug").collection("reviews");
 
     app.get("/services", async (req, res) => {
       const cursor = serviceCollection.find({});
       const services = await cursor.limit(3).toArray();
       res.send(services);
+    });
+
+    app.get("/services/:id", async (req, res) => {
+      const query = { _id: ObjectId(req.params.id) };
+      const service = await serviceCollection.findOne(query);
+      res.send(service);
+    });
+
+    app.post("/reviews", async (req, res) => {
+      const review = req.body;
+      const result = await reviewCollection.insertOne(review);
+      res.send(result);
     });
   } finally {
   }
