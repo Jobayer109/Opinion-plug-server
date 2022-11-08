@@ -18,6 +18,12 @@ const client = new MongoClient(uri, {
 const dbConnect = async () => {
   try {
     const serviceCollection = client.db("opinion-plug").collection("services");
+
+    app.get("/services", async (req, res) => {
+      const cursor = serviceCollection.find({});
+      const services = await cursor.limit(3).toArray();
+      res.send(services);
+    });
   } finally {
   }
 };
