@@ -50,6 +50,12 @@ const dbConnect = async () => {
       const result = await cursor.toArray();
       res.send(result);
     });
+
+    app.delete("/reviews/:id", async (req, res) => {
+      const query = { _id: ObjectId(req.params.id) };
+      const result = await reviewCollection.deleteOne(query);
+      res.send(result);
+    });
   } finally {
   }
 };
