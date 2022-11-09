@@ -22,7 +22,7 @@ const dbConnect = async () => {
 
     app.get("/services", async (req, res) => {
       const cursor = serviceCollection.find({});
-      const services = await cursor.limit(3).toArray();
+      const services = await cursor.toArray();
       res.send(services);
     });
 
@@ -35,6 +35,19 @@ const dbConnect = async () => {
     app.post("/reviews", async (req, res) => {
       const review = req.body;
       const result = await reviewCollection.insertOne(review);
+      res.send(result);
+    });
+
+    app.get("/reviews", async (req, res) => {
+      let query = {};
+
+      if (req.query.serviceId) {
+        query = {
+          serviceId: req.query.serviceId,
+        };
+      }
+      const cursor = reviewCollection.find(query);
+      const result = await cursor.toArray();
       res.send(result);
     });
   } finally {
