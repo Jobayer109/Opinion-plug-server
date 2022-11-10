@@ -20,6 +20,12 @@ const dbConnect = async () => {
     const serviceCollection = client.db("opinion-plug").collection("services");
     const reviewCollection = client.db("opinion-plug").collection("reviews");
 
+    app.post("/jwt", (req, res) => {
+      const user = req.body;
+      const token = jwt.sign(user, process.env.SECRET_TOKEN, { expiresIn: "1d" });
+      res.send({ token });
+    });
+
     app.post("/service", async (req, res) => {
       const service = req.body;
       const result = await serviceCollection.insertOne(service);
@@ -27,9 +33,18 @@ const dbConnect = async () => {
     });
 
     app.get("/services", async (req, res) => {
-      const cursor = serviceCollection.find({});
-      const services = await cursor.toArray();
-      res.send(services);
+      const page = parseInt(req.query.page);
+      const size = parseInt(req.query.size);
+
+      let query = {};
+
+      const cursor = serviceCollection.find(query);
+      const count = await serviceCollection.estimatedDocumentCount(query);
+      const services = await cursor
+        .skip(page * size)
+        .limit(size)
+        .toArray();
+      res.send({ count, services });
     });
 
     app.get("/homeServices", async (req, res) => {
@@ -66,6 +81,18 @@ const dbConnect = async () => {
     app.delete("/reviews/:id", async (req, res) => {
       const query = { _id: ObjectId(req.params.id) };
       const result = await reviewCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    app.patch("/reviews/:id", async (req, res) => {
+      const comment = req.body.comment;
+      const query = { serviceId: req.query.serviceId };
+      const updateDoc = {
+        $set: {
+          comment: comment,
+        },
+      };
+      const result = await reviewCollection.updateOne(query, updateDoc);
       res.send(result);
     });
   } finally {
